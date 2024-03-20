@@ -21,4 +21,6 @@
 + ```git push```: pushing info from local to GitHub
 
 ##### Other useful command for Git
-+ ```git status```: 
++ ```git status```: check the staging area, will appear which file is modified
++ ```git log```: history of commit made in repository
++ ```git log -- oneline```: brief histroy of commit made in repository
