@@ -22,8 +22,8 @@ nseg = 1 # []: (int)
 Vo = -65 # [mV]: Vm @ rest for initializing membrane potential at start of simulation, seems accurate for layer 1 neurons
 D = 12 # [um]: fiber diameter
 inl = 100*D # [um]: internodal length
-rhoa = 70 # [Ohm]: axoplasmic/axial resistivity
-cm = 378.94 # [uF/cm**2]
+rhoa = 100 # [Ohm]: axoplasmic/axial resistivity
+cm = 1 # [uF/cm**2]
 L = 1 # [um], nodal length
 g = 27.66e-3 # [S/cm**2]: Passive conductance in S/cm2
 
