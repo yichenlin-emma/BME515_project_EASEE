@@ -20,6 +20,11 @@
 + ```git commit -m "<commit message>"```: put file that git is tracking into repository
 + ```git push```: pushing info from local to GitHub
 
+##### Merge repository in GitHub (after pushing your branch onto GitHub)
++ click "Pull requests"
++ click "Compare & pull requests"
++ click "create pull request"
+
 ##### Other useful command for Git
 + ```git status```: check the staging area, will appear which file is modified
 + ```git log```: history of commit made in repository
