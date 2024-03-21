@@ -13,23 +13,22 @@ h.load_file('stdrun.hoc')
 
 # MODEL SPECIFICATION
 # time params
-h.tstop = 10 # [ms]: simulation time
+h.tstop = 100 # [ms]: simulation time
 h.dt = 0.001 # [ms]: timestep, usually 0.001
 
-# cell params
+# cell params (human layer 1 neocortical neuron)
 n_nodes = 51 # []: (int) number of sections, enough to neglect end effects
 nseg = 1 # []: (int)
-# TODO: fill in correct parameters
-Vo = -65 # [mV]: Vm @ rest for initializing membrane potential at start of simulation
-D =  # [um]: fiber diameter
+Vo = -65 # [mV]: Vm @ rest for initializing membrane potential at start of simulation, seems accurate for layer 1 neurons
+D = 12 # [um]: fiber diameter
 inl = 100*D # [um]: internodal length
-rhoa =  # [Ohm]: axoplasmic/axial resistivity
-cm =  # [uF/cm**2]
-L =  # [um], nodal length
-g =  # [S/cm**2]: Passive conductance in S/cm2
+rhoa = 70 # [Ohm]: axoplasmic/axial resistivity
+cm = 378.94 # [uF/cm**2]
+L = 1 # [um], nodal length
+g = 27.66e-3 # [S/cm**2]: Passive conductance in S/cm2
 
 # material params
-sigma_e = 2e-4 # [S/mm]: extracellular medium resistivity # TODO: update this with general brain tissue resistivity
+sigma_e = 0.4e-3 # [S/mm]: extracellular medium resistivity, here of white and gray matter
 
 # stim params for intracellular electrode that simulates epileptic activity
 epilep_delay = 0 # [ms]: start time of stim
@@ -37,8 +36,8 @@ epilep_dur = h.tstop # [ms]: start time of stim
 epilep_amp = 50 # [mA]: amplitude of (intracellular) stim object (negative cathodic, positive anodic), chosen amplitude
 # that def. triggers AP, determined via XX TODO: explain whre we got that value from
 # we want to have a rectangular stimulation pattern of a certain frequency:
-epilep_f =  110*(10**-3)# [Hz * 10**-3 = ms^-1]: frequency of intracell. stim, set to 110 since firing rates above 100Hz
-# indicate epileptic activity in a neuron TODO: insert citation
+epilep_f = 110*(10**-3)# [Hz * 10**-3 = ms^-1]: frequency of intracell. stim, set to 110 since firing rates above 100Hz
+# indicate epileptic activity in a neuron
 t = np.arange(0, h.tstop, h.dt)
 epilep_stim_wave = epilep_amp/2 * signal.square(2 * np.pi * epilep_f * t, duty=0.5) + epilep_amp/2  # rectangular wave
 epilep_stim_wave_vec = h.Vector(epilep_stim_wave)  # creating a vector with a rect. stim wave
@@ -58,11 +57,12 @@ for node_ind, node in enumerate(nodes):
     node.Ra = rhoa*((L+inl)/L) # left this in here since it is a fn(*other params)
     node.cm = cm
     node.insert('hh')
+    # node.insert('pas')
     node.insert('extracellular')
 
     for seg in node:
-        seg.pas.g = g
-        seg.pas.e = Vo  # setting this so there is no need to let membrane equilibriate for too long before stimulating
+        # seg.pas.g = g
+        # seg.pas.e = Vo  # setting this so there is no need to let membrane equilibriate for too long before stimulating
         seg.extracellular.e = 0  # extracellular voltages are 0
 
     if node_ind > 0:
@@ -88,11 +88,12 @@ tvec = h.Vector().record(h._ref_t)
 # run stimulation
 h.finitialize(Vo)
 
+
 # this is somewhat of a "hack" to change the default run procedure in HOC
-h(r"""
-proc advance() {
-    nrnpython("my_advance()")
-}""")
+#h(r"""
+#proc advance() {
+#    nrnpython("my_advance()")
+#}""")
 
 # run until tstop
 h.continuerun(h.tstop)
@@ -100,11 +101,12 @@ h.continuerun(h.tstop)
 
 # DATA POST PROCESSING / OUTPUT
 # plot things
-fig = plt.figure(num=1, clear=True)
-ax = fig.add_subplot(1,1,1)
-ax.plot(tvec, epilep_vol_mem)
-ax.set(xlabel="time (ms)", ylabel="membrane voltage (mV)",
-       title="Transmembrane potential of an intracellularly activated \nnerve fiber simulating epileptic activity")
+fig, (ax1, ax2) = plt.subplots(nrows=2, sharex=True)
+ax1.plot(tvec, epilep_vol_mem)
+ax1.set(ylabel="membrane voltage (mV)",
+        title="Transmembrane potential of an intracellularly activated \nnerve fiber simulating epileptic activity")
+ax2.plot(t, epilep_stim_wave)
+ax2.set(xlabel="time (ms)", ylabel="stimulus voltage (mV)")
 plt.tight_layout()
 plt.show()
 
