@@ -7,14 +7,14 @@ from neuron import h
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
-
+import seaborn as sns
 # load run controls
 h.load_file('stdrun.hoc')
 
 # MODEL SPECIFICATION
 # time params
-h.tstop = 100 # [ms]: simulation time
-h.dt = 0.001 # [ms]: timestep, usually 0.001
+h.tstop = 10000 # [ms]: simulation time
+h.dt = 0.01 # [ms]: timestep, usually 0.001
 
 # cell params (human layer 1 neocortical neuron)
 n_nodes = 51 # []: (int) number of sections, enough to neglect end effects
@@ -32,7 +32,7 @@ sigma_e = 0.4e-3 # [S/mm]: extracellular medium resistivity, here of white and g
 
 # stim params for intracellular electrode that simulates epileptic activity
 epilep_delay = 0 # [ms]: start time of stim
-epilep_dur = h.tstop # [ms]: start time of stim
+epilep_dur = 3000 # [ms]: start time of stim
 epilep_amp = 50 # [mA]: amplitude of (intracellular) stim object (negative cathodic, positive anodic), chosen amplitude
 # that def. triggers AP, determined via XX TODO: explain whre we got that value from
 # we want to have a rectangular stimulation pattern of a certain frequency:
@@ -84,7 +84,7 @@ epilep_stim_wave_vec.play(epilep_stim._ref_amp, time_vec, True)  # setting intra
 # create neuron "vector" for recording membrane potentials
 epilep_vol_mem = h.Vector().record(nodes[25](0.5)._ref_v)  # record at middle of fiber
 tvec = h.Vector().record(h._ref_t)
-
+apc = h.APCount(nodes[0](0.5))
 # run stimulation
 h.finitialize(Vo)
 
@@ -98,16 +98,49 @@ h.finitialize(Vo)
 # run until tstop
 h.continuerun(h.tstop)
 
+# calculate the firing rate
+firing_rate = apc.n/epilep_dur*1000
+print("The firing rate is {} Hz.".format(firing_rate))
 
 # DATA POST PROCESSING / OUTPUT
-# plot things
+# plot the first 100 ms
 fig, (ax1, ax2) = plt.subplots(nrows=2, sharex=True)
-ax1.plot(tvec, epilep_vol_mem)
+ax1.plot(tvec.as_numpy()[:10000], epilep_vol_mem.as_numpy()[:10000])
 ax1.set(ylabel="membrane voltage (mV)",
         title="Transmembrane potential of an intracellularly activated \nnerve fiber simulating epileptic activity")
-ax2.plot(t, epilep_stim_wave)
+ax2.plot(t[:10000], epilep_stim_wave[:10000])
 ax2.set(xlabel="time (ms)", ylabel="stimulus voltage (mV)")
 plt.tight_layout()
+plt.show()
+
+# plot all
+plt.plot(tvec, epilep_vol_mem)
+plt.xlabel('time (ms)')
+plt.ylabel('membrane voltage (mV)')
+plt.title("Transmembrane potential of an intracellularly activated \nnerve fiber simulating epileptic activity")
+plt.show()
+
+# Plot the power spectrum
+sf = 1000
+win = 2 * sf
+freqs, psd = signal.welch(epilep_vol_mem, sf, nperseg=win)
+
+plt.loglog(freqs, psd, color='k', lw=2)
+plt.xlabel('Frequency (Hz)')
+plt.ylabel('Power spectral density (V^2 / Hz)')
+# plt.ylim([0, psd.max() * 1.1])
+plt.title("Power Spectrum")
+plt.xlim([0, freqs.max()])
+
+powerlaw = np.linspace(1, 100, 100)
+plt.loglog(powerlaw, 1000*powerlaw ** -2, linestyle='--', label=f'f^-2')
+plt.loglog(powerlaw, 10*powerlaw ** -4, linestyle='--', label=f'f^-4')
+# exponents = np.array([-3, -5])
+# for exponent in exponents:
+#     y_powerlaw = 0.1*powerlaw ** exponent
+#     plt.loglog(powerlaw, y_powerlaw, linestyle='--', label=f'f^{exponent}')
+    
+plt.legend()
 plt.show()
 
 print('============ DONE ============')
