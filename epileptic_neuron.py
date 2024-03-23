@@ -37,6 +37,12 @@ epilep_amp = 50 # [mA]: amplitude of (intracellular) stim object (negative catho
 # that def. triggers AP, determined via XX TODO: explain whre we got that value from
 # we want to have a rectangular stimulation pattern of a certain frequency:
 epilep_f = 110*(10**-3)# [Hz * 10**-3 = ms^-1]: frequency of intracell. stim, set to 110 since firing rates above 100Hz
+
+# stim for product electrode
+e_stim1_delay = 0 # [ms]: start time of stim
+e_stim1_dur = 0 # [ms]: duration of stim
+e_stim1_amp = 0 # [mA]: amplitude of (product) stim
+
 # indicate epileptic activity in a neuron
 t = np.arange(0, h.tstop, h.dt)
 epilep_stim_wave = epilep_amp/2 * signal.square(2 * np.pi * epilep_f * t, duty=0.5) + epilep_amp/2  # rectangular wave
@@ -69,15 +75,35 @@ for node_ind, node in enumerate(nodes):
         node.connect(nodes[node_ind-1](1))
 
 # INSTRUMENTATION - STIMULATION/RECORDING
+dummy = h.Section(name='dummy')
 # create intracellular current stimulus
 epilep_stim = h.IClamp(nodes[0](0))  # placing electrode at beginning of first node in fiber
 epilep_stim.delay = epilep_delay
 epilep_stim.dur = epilep_dur
+# create product electrode
+e_stim_obj1 = h.IClamp(dummy(0.5)) # puts the stim halfway along the length
+e_stim_obj1.delay = e_stim1_delay
+e_stim_obj1.dur = e_stim1_dur
+e_stim_obj1.amp = e_stim1_amp
+
 # creating a hoc time vector for the vector play function
 time_vec = h.Vector()
 for step in np.arange(0, h.tstop, h.dt):
     time_vec.append(step)
+
 epilep_stim_wave_vec.play(epilep_stim._ref_amp, time_vec, True)  # setting intracell. stimulation to rectangular wave
+
+# calculate extracellular potentials
+phi_e1 = []
+dist1 = 0.25 # [mm]: distance between electrode1 and epileptic neuron
+# assume our pyramidal cell lay in layer II, which is about 250 um away
+start = -((n_nodes-1)/2)*(inl+L)
+for node_ind, node in enumerate(nodes):
+    x_loc1 = 1e-3*(start + (inl+L)*node_ind) # 1e-3 [um] -> [mm]
+    r1 = np.sqrt(x_loc1**2 + dist1**2)  # [mm]
+    phi_e1.append(1/(4*sigma_e*np.pi*r1))
+h.t = 0
+
 
 # stimulate and record
 # set recording vectors
@@ -87,6 +113,10 @@ tvec = h.Vector().record(h._ref_t)
 apc = h.APCount(nodes[0](0.5))
 # run stimulation
 h.finitialize(Vo)
+while h.t < h.tstop:
+    for node, phi1 in zip(nodes, phi_e1):
+        node(0.5).e_extracellular = phi1 * e_stim_obj1.i
+    h.fadvance()
 
 
 # this is somewhat of a "hack" to change the default run procedure in HOC
