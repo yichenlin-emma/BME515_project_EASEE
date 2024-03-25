@@ -1,4 +1,5 @@
 # creating a neocortical nerve fiber with epileptic activity pattern
+# 1 extracellular electrode
 
 # imports
 import signal
