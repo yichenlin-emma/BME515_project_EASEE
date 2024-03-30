@@ -1,0 +1,31 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="DuplicatedCode" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <Languages>
+        <language minSize="57" name="Python" />
+      </Languages>
+    </inspection_tool>
+    <inspection_tool class="PyPep8NamingInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="N803" />
+          <option value="N806" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="Hw05.solveEqns.EL" />
+          <option value="Hw05.solveEqns.gL" />
+          <option value="Hw05.solveEqns.gy" />
+          <option value="solveEqns.R" />
+          <option value="solveEqns.t1" />
+          <option value="solveEqns.L" />
+          <option value="solveEqns.t2" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

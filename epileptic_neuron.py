@@ -34,7 +34,7 @@ sigma_e = 0.4e-3 # [S/mm]: extracellular medium resistivity, here of white and g
 epilep_delay = 0 # [ms]: start time of stim
 epilep_dur = 3000 # [ms]: start time of stim
 epilep_amp = 50 # [mA]: amplitude of (intracellular) stim object (negative cathodic, positive anodic), chosen amplitude
-# that def. triggers AP, determined via XX TODO: explain whre we got that value from
+# that def. triggers AP, determined via experimentation
 # we want to have a rectangular stimulation pattern of a certain frequency:
 epilep_f = 110*(10**-3)# [Hz * 10**-3 = ms^-1]: frequency of intracell. stim, set to 110 since firing rates above 100Hz
 # indicate epileptic activity in a neuron
