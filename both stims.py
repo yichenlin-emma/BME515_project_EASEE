@@ -1,5 +1,5 @@
-# creating a neocortical nerve fiber with epileptic activity pattern
-# 1 extracellular electrode
+# creating a neocortical nerve fiber with epileptic activity pattern and 5 extracellular electrodes using Precisis' 
+# stimulus parameters
 
 # imports
 import signal
@@ -31,12 +31,13 @@ g = 27.66e-3 # [S/cm**2]: Passive conductance in S/cm2
 sigma_e = 0.4e-3 # [S/mm]: extracellular medium resistivity, here of white and gray matter
 
 # stim params for intracellular electrode that simulates epileptic activity
-epilep_delay = 0 # [ms]: start time of stim
+# epilep_delay = 0 # [ms]: start time of stim
 epilep_dur = h.tstop # [ms]: duration of stim
 epilep_amp = 0.2 # [mA]: amplitude of (intracellular) stim object (negative cathodic, positive anodic), chosen amplitude
 # that def. triggers AP, determined via experiments
 # we want to have a rectangular stimulation pattern of a certain frequency:
-epilep_f = 110*(10**-3)# [Hz * 10**-3 = ms^-1]: frequency of intracell. stim, set to 110 since firing rates above 100Hz
+epilep_f = 100*(10**-3)# [Hz * 10**-3 = ms^-1]: frequency of intracell. stim, firing rates above 100Hz
+# TODO: epilepsy_f needs to be refined to account for exact diseases Precisis is targeting 
 # indicate epileptic activity in a neuron
 t = np.arange(0, h.tstop+h.dt, h.dt)
 epilep_stim_wave = epilep_amp/2 * signal.square(2 * np.pi * epilep_f * t, duty=0.5) + epilep_amp/2  # rectangular wave
@@ -48,16 +49,16 @@ e1_delay = 0  # [ms]: start time of stim
 
 # TWO STIM SETTINGS, COMMENT ONE OUT!
 # -----
-'''# HFS (high frequency stimualtion mode)
+# HFS (high frequency stimualtion mode)
 e1_dur = 500 # [ms]: duration of stim, 0.5 sec for high frequency stimulation
 e1_amp = 4  # [mA]: amplitude of stim object (negative cathodic, positive anodic)
 e1_f = 100*(10**-3)# [Hz * 10**-3 = ms^-1]: 100Hz high frquency stim
 e1_pw = 0.16  # [s]: total rectangular pulse width
 duty_cyc_1 = 0.5*e1_pw / (1/e1_f - 0.5*e1_pw) # duty cycle of half rect. pulse
 e1_stim_wave_pos = e1_amp/2 * signal.square(2 * np.pi * e1_f * t, duty=duty_cyc_1) + e1_amp/2 # positive portion
-e1_stim_wave_neg = -e1_amp/2 * signal.square(2 * np.pi * e1_f * (t - 0.5*e1_pw), duty=duty_cyc_1) - e1_amp/2 # negative portion'''
+e1_stim_wave_neg = -e1_amp/2 * signal.square(2 * np.pi * e1_f * (t - 0.5*e1_pw), duty=duty_cyc_1) - e1_amp/2 # negative portion
 # -----
-# LFS (low frequency stimulation mode): 20ms -2mA, then 100ms +0.4mA, then 5ms off
+'''# LFS (low frequency stimulation mode): 20ms -2mA, then 100ms +0.4mA, then 5ms off
 e1_dur = 60000 # [ms]: duration of stim, let's say 1min at a time
 e1_amp_neg = 2 # [mA]: amplitude of stim object (negative cathodic, positive anodic)
 e1_amp_pos = 0.4 # [mA]: amplitude of stim object (negative cathodic, positive anodic)
@@ -66,7 +67,7 @@ e1_pos_shift = 0.02  # [s]: by how much the positive stim curve needs to be shif
 duty_cyc_neg = 0.02 / (1/e1_f - 0.02)  # neg stimulation is only "ON" for 20ms
 duty_cyc_pos = 0.09 / (1/e1_f - 0.09)  # pos stim is "ON" for 120ms out of 125ms period, had to adjust this due to edges
 e1_stim_wave_neg = -e1_amp_neg/2 * signal.square(2*np.pi*e1_f * t, duty=duty_cyc_neg) - e1_amp_neg/2 # negative portion
-e1_stim_wave_pos = e1_amp_pos/2 * signal.square(2*np.pi*e1_f * (t - e1_pos_shift), duty=duty_cyc_pos) + e1_amp_pos/2 # positive portion
+e1_stim_wave_pos = e1_amp_pos/2 * signal.square(2*np.pi*e1_f * (t - e1_pos_shift), duty=duty_cyc_pos) + e1_amp_pos/2 # positive portion'''
 # ------'
 
 e1_stim_wave = e1_stim_wave_pos + e1_stim_wave_neg
@@ -99,7 +100,8 @@ for node_ind, node in enumerate(nodes):
 # INSTRUMENTATION - STIMULATION/RECORDING
 # create intracellular current stimulus
 epilep_stim = h.IClamp(nodes[0](0))  # placing electrode at beginning of first node in fiber
-epilep_stim.delay = epilep_delay
+epilep_stim.delay = e1_pw * 1000  # [ms], added delay here to see if hyperpolarization before intracellular stimulation 
+# changes activation pattern # TODO: play with this delay to investigate effect on firing rate 
 epilep_stim.dur = epilep_dur
 # creating a hoc time vector for the vector play function
 time_vec = h.Vector()
@@ -161,7 +163,9 @@ proc advance() {
 h.continuerun(h.tstop)
 
 # calculate the firing rate
-firing_rate = apc.n/h.tstop * 1000
+firing_rate = apc.n/h.tstop * 1000  # note: this is calculated over h.tstop time - but there are temporal differences 
+# in effect of extracell stim on fiber potential!! # TODO: investigate effect of different delays on firing rate - 
+#  TODO: take into account that this is a mean and there are temporal differences"
 print("The firing rate is {} Hz.".format(firing_rate))
 
 
@@ -177,12 +181,5 @@ ax3.plot(tvec.as_numpy(), e1_stim_wave_vec.as_numpy())
 ax3.set(xlabel="time (ms)", ylabel="extracell. stimulus \nvoltage (mV)")
 plt.tight_layout()
 plt.show()
-
-'''# plot all
-plt.plot(tvec, epilep_vol_mem)
-plt.xlabel('time (ms)')
-plt.ylabel('membrane voltage (mV)')
-plt.title("Transmembrane potential of an extracellularly \nactivated epileptic nerve fiber")
-plt.show()'''
 
 print('============ DONE ============')
