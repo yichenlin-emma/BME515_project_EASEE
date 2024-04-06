@@ -172,7 +172,9 @@ print("The firing rate is {} Hz.".format(firing_rate))
 
 # Reconstruct stim for plotting (add delay)
 epilep_stim_wave_plot = epilep_stim_wave
+epilep_stim_wave_plot[int(epilep_dur/h.dt):-1] = 0
 e1_stim_wave_plot = e1_stim_wave
+e1_stim_wave_plot[int(e1_dur/h.dt):-1] = 0
 if epilep_delay > 0:
     epilep_stim_wave_plot[0:int(epilep_delay/h.dt)] = 0
 if e1_delay > 0:
