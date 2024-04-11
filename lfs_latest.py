@@ -13,12 +13,12 @@ h.load_file('stdrun.hoc')
 
 # MODEL SPECIFICATION
 # time params
-h.tstop = 1000 # [ms]: simulation time
+h.tstop = 500 # [ms]: simulation time
 h.dt = 0.01 # [ms]: timestep, usually 0.001
 
 # cell params (human layer 1 neocortical neuron)
 n_nodes = 51 # []: (int) number of sections, enough to neglect end effects
-nseg = 1 # []: (int)
+nseg = 11 # []: (int)
 Vo = -65 # [mV]: Vm @ rest for initializing membrane potential at start of simulation, seems accurate for layer 1 neurons
 D = 12 # [um]: fiber diameter
 inl = 100*D # [um]: internodal length
@@ -33,44 +33,45 @@ sigma_e = 0.4e-3 # [S/mm]: extracellular medium resistivity, here of white and g
 # stim params for intracellular electrode that simulates epileptic activity
 epilep_delay = 0 # [ms]: start time of stim
 epilep_dur = h.tstop # [ms]: duration of stim
-epilep_amp = 0.1 # [mA]: amplitude of (intracellular) stim object (negative cathodic, positive anodic), chosen amplitude
+epilep_amp = 5 # [mA]: amplitude of (intracellular) stim object (negative cathodic, positive anodic), chosen amplitude
 # that def. triggers AP, determined via experiments
 # we want to have a rectangular stimulation pattern of a certain frequency:
-epilep_f = 40*(10**-3)# [Hz * 10**-3 = ms^-1]: frequency of intracell. stim, firing rates above 100Hz
+epilep_f = 180*(10**-3)# [Hz * 10**-3 = ms^-1]: frequency of intracell. stim, firing rates above 100Hz
 # TODO: epilepsy_f needs to be refined to account for exact diseases Precisis is targeting 
 # indicate epileptic activity in a neuron
 t = np.arange(0, h.tstop+h.dt, h.dt)
-epilep_stim_wave = epilep_amp/2 * signal.square(2 * np.pi * epilep_f * t, duty=0.5) + epilep_amp/2  # rectangular wave
+epilep_stim_wave = epilep_amp * signal.square(2 * np.pi * epilep_f * t)  # rectangular wave
 epilep_stim_wave_vec = h.Vector(epilep_stim_wave)  # creating a vector with a rect. stim wave
 
 # stim parameters for extracellular stimulation
-e2f_1 = 6.25# [mm]: electrode 1 to fiber distance, skull thickness at temporal lobe plus cortex
-e1_delay = 250  # [ms]: start time of stim
+e2f_1 = 6 # [mm]: electrode 1 to fiber distance, skull thickness at temporal lobe plus cortex
+e1_delay = 100  # [ms]: start time of stim
 
 # TWO STIM SETTINGS, COMMENT ONE OUT!
 # -----
+'''
 # HFS (high frequency stimualtion mode)
-e1_dur = 1000 # [ms]: duration of stim, 0.5 sec for high frequency stimulation
-e1_amp = 3.5  # [mA]: amplitude of stim object (negative cathodic, positive anodic)
+e1_dur = 300 # [ms]: duration of stim, 0.5 sec for high frequency stimulation
+e1_amp = 4  # [mA]: amplitude of stim object (negative cathodic, positive anodic)
 e1_f = 100*(10**-3)# [Hz * 10**-3 = ms^-1]: 100Hz high frquency stim
 e1_pw = 0.16  # [s]: total rectangular pulse width
-duty_cyc_1 = 0.5*e1_pw / (1/e1_f - 0.5*e1_pw) # duty cycle of half rect. pulse
+duty_cyc_1 = 0.5*e1_pw / (1/e1_f - 0.5*e1_pw)  # duty cycle of half rect. pulse
 e1_stim_wave_pos = e1_amp/2 * signal.square(2 * np.pi * e1_f * t, duty=duty_cyc_1) + e1_amp/2 # positive portion
-e1_stim_wave_neg = -e1_amp/2 * signal.square(2 * np.pi * e1_f * (t - 0.5*e1_pw), duty=duty_cyc_1) - e1_amp/2 # negative portion
+e1_stim_wave_neg = -e1_amp/2 * signal.square(2 * np.pi * e1_f * (t + 0.5), duty=duty_cyc_1) - e1_amp/2 # negative portion
+'''
+
 # -----
-'''# LFS (low frequency stimulation mode): 20ms -2mA, then 100ms +0.4mA, then 5ms off
-e1_dur = 60000 # [ms]: duration of stim, let's say 1min at a time
+# LFS (low frequency stimulation mode): 20ms -2mA, then 100ms +0.4mA, then 5ms off
+e1_dur = 500 # [ms]: duration of stim, let's say 1min at a time
 e1_amp_neg = 2 # [mA]: amplitude of stim object (negative cathodic, positive anodic)
 e1_amp_pos = 0.4 # [mA]: amplitude of stim object (negative cathodic, positive anodic)
 e1_f = 8*(10**-3)# [Hz * 10**-3 = ms^-1]: 8Hz low frquency stim (with 125ms length, 8 pulses per second)
-e1_pos_shift = 0.02  # [s]: by how much the positive stim curve needs to be shifted to the right
-duty_cyc_neg = 0.02 / (1/e1_f - 0.02)  # neg stimulation is only "ON" for 20ms
-duty_cyc_pos = 0.09 / (1/e1_f - 0.09)  # pos stim is "ON" for 120ms out of 125ms period, had to adjust this due to edges
-e1_stim_wave_neg = -e1_amp_neg/2 * signal.square(2*np.pi*e1_f * t, duty=duty_cyc_neg) - e1_amp_neg/2 # negative portion
-e1_stim_wave_pos = e1_amp_pos/2 * signal.square(2*np.pi*e1_f * (t - e1_pos_shift), duty=duty_cyc_pos) + e1_amp_pos/2 # positive portion'''
+e1_stim_wave_neg = -e1_amp_neg/2 * signal.square(2*np.pi*0.008 * (t+150), duty=20/125) - e1_amp_neg/2 # negative portion
+e1_stim_wave_pos = e1_amp_pos/2 * signal.square(2*np.pi*0.008 * (t+5), duty=100/125) + e1_amp_pos/2 # positive portion
+# e1_delay = np
 # ------'
 
-e1_stim_wave = e1_stim_wave_pos + e1_stim_wave_neg
+e1_stim_wave = e1_stim_wave_neg+e1_stim_wave_pos
 e1_stim_wave_vec = h.Vector(e1_stim_wave)  # creating a vector with a rect. stim wave
 
 # MODEL INITIALIZATION
@@ -85,8 +86,7 @@ for node_ind, node in enumerate(nodes):
     node.L = L
     node.Ra = rhoa*((L+inl)/L) # left this in here since it is a fn(*other params)
     node.cm = cm
-    node.insert('hh')
-    # node.insert('pas')
+    node.insert('hh') 
     node.insert('extracellular')
 
     for seg in node:
@@ -133,6 +133,7 @@ def update_field():
         # x_loc_c = 1e-3 * (-(n_nodes-1)/2*inl + inl*node_ind)
         # r_c = np.sqrt(x_loc_c ** 2 + e2f_1 ** 2)
         # node(0.5).e_extracellular = electrode.i//(4*sigma_e*np.pi*r_c)
+        
         x_loc_l = 1e-3 * (-(n_nodes-1)/2*inl + inl*node_ind - 15) # 1e-3 [um] -> [mm], for left electrodes
         x_loc_r = 1e-3 * (-(n_nodes-1)/2*inl + inl*node_ind + 15)  # 1e-3 [um] -> [mm], for right electrodes
         x_loc_c = 1e-3 * (-(n_nodes-1)/2*inl + inl*node_ind)  # 1e-3 [um] -> [mm], for center electrode
