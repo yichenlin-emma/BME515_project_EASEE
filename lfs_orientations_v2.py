@@ -49,7 +49,7 @@ epilep_stim_wave = epilep_amp/2 * signal.square(2 * np.pi * epilep_f * t, duty=0
 epilep_stim_wave_vec = h.Vector(epilep_stim_wave)  # creating a vector with a rect. stim wave
 
 # stim parameters for extracellular stimulation
-e2f_1 = 5.519 # [mm]: electrode 1 to fiber distance, skull thickness at temporal lobe plus cortex
+e2f = 5.519 # [mm]: electrode 1 to fiber distance, skull thickness at temporal lobe plus cortex
 e1_delay = 100  # [ms]: start time of stim
 
 # LFS (low frequency stimulation mode): 20ms -2mA, then 100ms +0.4mA, then 5ms off
