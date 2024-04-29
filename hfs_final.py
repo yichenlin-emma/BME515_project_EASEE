@@ -120,8 +120,8 @@ def update_field():
         # r_c = np.sqrt(x_loc_c ** 2 + e2f_1 ** 2)
         # node(0.5).e_extracellular = electrode.i//(4*sigma_e*np.pi*r_c)
         
-        x_loc_l = 1e-3 * (-(n_nodes-1)/2*inl + inl*node_ind - 15) # 1e-3 [um] -> [mm], for left electrodes
-        x_loc_r = 1e-3 * (-(n_nodes-1)/2*inl + inl*node_ind + 15)  # 1e-3 [um] -> [mm], for right electrodes
+        x_loc_l = 1e-3 * (-(n_nodes-1)/2*inl + inl*node_ind) - 15 # 1e-3 [um] -> [mm], for left electrodes
+        x_loc_r = 1e-3 * (-(n_nodes-1)/2*inl + inl*node_ind) + 15  # 1e-3 [um] -> [mm], for right electrodes
         x_loc_c = 1e-3 * (-(n_nodes-1)/2*inl + inl*node_ind)  # 1e-3 [um] -> [mm], for center electrode
         # y distance is 15mm for left and right, and 0mm for central
         # radii
@@ -171,9 +171,9 @@ print("The firing rate after stimulation is {} Hz.".format(firing_rate_after))
 
 # Reconstruct stim for plotting (add delay)
 epilep_stim_wave_plot = epilep_stim_wave
-epilep_stim_wave_plot[int(epilep_dur/h.dt):-1] = 0
+epilep_stim_wave_plot[int((epilep_delay+epilep_dur)/h.dt):] = 0
 e1_stim_wave_plot = e1_stim_wave
-e1_stim_wave_plot[int(e1_dur/h.dt):-1] = 0
+e1_stim_wave_plot[int((e1_delay+e1_dur)/h.dt):] = 0
 if epilep_delay > 0:
     epilep_stim_wave_plot[0:int(epilep_delay/h.dt)] = 0
 if e1_delay > 0:
